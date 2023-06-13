@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.U2D.Animation;
-using Pixelplacement;
+using UnityEngine.U2D;
+using System.Linq;
 
 [ExecuteAlways]
 public class StarVertexesManager : MonoBehaviour
 {
     [SerializeField] SpriteSkin spriteSkin;
     [SerializeField] GameObject StarPrefab;
-    [SerializeField] Spline spline;
+    Spline spline;
+    [SerializeField]SpriteShapeController spriteShapeController;
 
-
-    [SerializeField] LinkedList<SplineAnchor> anchors;
+    int[] sortedIndexes;
+    List<GameObject> stars;
 
     [MenuItem("Stars/Create Stars")]
     public static void CreateVertexes()
@@ -23,38 +25,70 @@ public class StarVertexesManager : MonoBehaviour
             throw new UnityException("Please sellect object with StarVertexesManager Component");
 
         manager.CreateVertexesForThis();
-    }    
+    }
+
+    void sortVerticesIndexes(Vector3[] originalArray)
+    {
+        int length = originalArray.Length;
+        var sortedArray = originalArray.OrderBy(i => Mathf.Atan2(i.y, i.x)).ToArray();
+        sortedIndexes = new int[length];
+
+        for(int i = 0; i < length; i++)
+        {
+            sortedIndexes[i] = System.Array.FindIndex(sortedArray,v => v.Equals(originalArray[i]));
+        }
+    }
 
     public void CreateVertexesForThis()
     {
-        anchors = new LinkedList<SplineAnchor>();
-        int i = 0;
-        foreach (var point in spriteSkin.GetDeformedVertexPositionData())
+        
+
+        //sortedIndexes = Enumerable.Range(0, originalPositions.Length)
+        //    .OrderBy(i => Mathf.Atan2(originalPositions[i].y, originalPositions[i].x))
+        //    .ToArray();
+
+        if (stars == null)
         {
-            var pos = spriteSkin.transform.TransformPoint(point);
-            spline.AddAnchors(1);
-            var anch = spline.Anchors[i++];
-            anch.transform.position = pos;
-            var star = Instantiate(StarPrefab, pos, Quaternion.identity, anch.transform);
-            anchors.AddLast(anch);
+            stars = new List<GameObject>();
+        }
+        foreach (var star in stars)
+        {
+            DestroyImmediate(star);
+        }
+        stars.Clear();
+        spline = spriteShapeController.spline;
+        spline.Clear();
+
+        var originalVerticesOrder = spriteSkin.GetDeformedVertexPositionData().ToArray();
+
+        sortVerticesIndexes(originalVerticesOrder);
+        for (int i = 0; i < originalVerticesOrder.Length; i++)
+        {
+            spline.InsertPointAt(i, Vector3.right * i + Vector3.up * 100f);
+            var star = Instantiate(StarPrefab, transform.position, Quaternion.identity, transform);
+            stars.Add(star);
+        }
+
+        for(int i = 0; i < originalVerticesOrder.Length; i++)
+        {
+            var pos = spriteSkin.transform.TransformPoint(originalVerticesOrder[i]);
+            spline.SetPosition(sortedIndexes[i], pos);
+            stars[sortedIndexes[i]].transform.position = pos;
         }
     }
 
     void Update()
     {
-        //if (anchors == null || spriteSkin == null)
-        //    return;
-
-        //var node = anchors.First;
-        int i = 0;
-        spline.enabled = false;
-        if(spriteSkin.HasCurrentDeformedVertices())
-        foreach (var point in spriteSkin.GetDeformedVertexPositionData())
+        
+        if (spriteSkin.HasCurrentDeformedVertices())
         {
-            spline.Anchors[i++].transform.position = spriteSkin.transform.TransformPoint(point);
-            //node.Value.transform.position = spriteSkin.transform.TransformPoint(point);
-            //node = node.Next;
+            var originalVerticesOrder = spriteSkin.GetDeformedVertexPositionData().ToArray();
+            for(int i = 0; i < originalVerticesOrder.Length; i++)
+            {
+                var pos = spriteSkin.transform.TransformPoint(originalVerticesOrder[i]);
+                stars[sortedIndexes[i]].transform.position = pos;
+                spline.SetPosition(sortedIndexes[i], pos);
+            }
         }
-        spline.enabled = true;
     }
 }
