@@ -15,7 +15,7 @@ public class StarVertexesManager : MonoBehaviour
     [SerializeField]SpriteShapeController spriteShapeController;
 
     [SerializeField] int[] sortedIndexes;
-    List<GameObject> stars;
+    [SerializeField] List<GameObject> stars;
 
     [MenuItem("Stars/Create Stars")]
     public static void CreateVertexes()
@@ -132,6 +132,15 @@ public class StarVertexesManager : MonoBehaviour
     }
     #endregion
 
+    #region trianglesMeshSort
+
+    #endregion
+
+    private void OnEnable()
+    {
+        spline = spriteShapeController.spline;
+    }
+
     public void CreateVertexesForThis()
     {
         
@@ -160,6 +169,7 @@ public class StarVertexesManager : MonoBehaviour
         {
             spline.InsertPointAt(i, Vector3.right * i + Vector3.up * 100f);
             var star = Instantiate(StarPrefab, transform.position, Quaternion.identity, transform);
+            EditorUtility.SetDirty(star);
             stars.Add(star);
         }
 
