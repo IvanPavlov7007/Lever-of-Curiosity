@@ -15,4 +15,15 @@ public class HitTrigger : MonoBehaviour
             hitable.hit();
         }
     }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!enabled)
+            return;
+        var hitable = collision.gameObject.GetComponentInParent<Hitable>();
+        if (hitable != null)
+        {
+            hitable.hit();
+        }
+    }
 }

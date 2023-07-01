@@ -7,6 +7,7 @@ public class StickController : MonoBehaviour
 {
     Camera cam;
     Transform distanceController, body;
+    Rigidbody rb;
 
     [SerializeField]
     float groundOffset = 0.10f;
@@ -26,6 +27,7 @@ public class StickController : MonoBehaviour
         distanceController = transform.GetChild(0);
         body = distanceController.transform.GetChild(0);
         initBodyPos = body.transform.localPosition;
+        rb = GetComponentInChildren<Rigidbody>();
     }
 
     public Vector3 calculateMousePosition()
@@ -39,15 +41,11 @@ public class StickController : MonoBehaviour
     float timer;
     float lerpPress;
 
+    Vector3 stickDirection;
+
     private void Update()
     {
-        Vector3 stickDirection = calculateMousePosition() - transform.position;
-        RaycastHit hit;
-        if(Physics.Raycast(new Ray(transform.position, stickDirection), out hit, 3f, layerMask))
-            distanceController.localPosition = new Vector3(0f, stickPhysicalHalfLength - hit.distance + groundOffset, 0f);
-
-        transform.up = -stickDirection;
-
+        #region inputAndLerpCalculation
         if (Input.GetMouseButtonDown(0))
         {
             mousePressed = true;
@@ -62,7 +60,27 @@ public class StickController : MonoBehaviour
             timer = Mathf.Min(timer + Time.deltaTime, pressTime);
         else
             timer = Mathf.Max(timer - Time.deltaTime, 0f);
+        lerpPress = 1f - Mathf.InverseLerp(0f, pressTime, timer);
+        //body.localPosition = initBodyPos + Vector3.down * groundOffset * Mathf.InverseLerp(0f, pressTime, timer);
+        #endregion
 
-        body.localPosition = initBodyPos + Vector3.down * groundOffset * Mathf.InverseLerp(0f, pressTime, timer);
+
+        stickDirection = calculateMousePosition() - transform.position;
+
+        
+    }
+
+    private void FixedUpdate()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(new Ray(transform.position, stickDirection), out hit, 10f, layerMask))
+        {
+            //distanceController.localPosition = new Vector3(0f, stickPhysicalHalfLength - hit.distance + groundOffset, 0f);
+            //transform.up = -stickDirection;
+
+            Vector3 direction = hit.point - transform.position;
+            rb.rotation = Quaternion.LookRotation(direction.normalized, transform.forward);
+            rb.position = transform.position + direction.normalized * (direction.magnitude - stickPhysicalHalfLength - groundOffset * lerpPress);
+        }
     }
 }
