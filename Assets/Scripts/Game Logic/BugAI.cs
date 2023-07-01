@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UniRx;
+using UnityEngine.AI;
 
 public class BugAI : MonoBehaviour
 {
@@ -12,12 +13,16 @@ public class BugAI : MonoBehaviour
     Vector3 currentTarget;
 
     Rigidbody rb;
+    NavMeshAgent navMeshAgent;
+
+
     float currentVelocity;
     System.IDisposable timer;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        navMeshAgent = GetComponent<NavMeshAgent>();
         timer = Observable.Interval(System.TimeSpan.FromSeconds(3f)).
             Subscribe(x =>
             {
@@ -38,9 +43,24 @@ public class BugAI : MonoBehaviour
             StartNewJourney();
         }
 
-        
 
-        rb.velocity = dist.normalized * currentVelocity;
+        navMeshAgent.speed = currentVelocity;
+
+        debug_rmb();
+        //rb.velocity = dist.normalized * currentVelocity;
+    }
+
+    void debug_rmb()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            var pos = Input.mousePosition;
+            var point = Camera.main.ScreenToWorldPoint(new Vector3(pos.x, pos.y, 3f));
+
+            NavMeshHit navMeshHit;
+            NavMesh.SamplePosition(point, out navMeshHit, 1f, 1);
+            navMeshAgent.SetDestination(navMeshHit.position);
+        }
     }
 
     private void OnDestroy()
@@ -51,6 +71,7 @@ public class BugAI : MonoBehaviour
     void StartNewJourney()
     {
         currentTarget = chooseNewPointRandomly();
+        navMeshAgent.SetDestination(currentTarget);
     }
 
     IEnumerator velocityChanger()
@@ -67,7 +88,10 @@ public class BugAI : MonoBehaviour
 
     Vector3 chooseNewPointRandomly()
     {
-        return new Vector3(Random.Range(-width, width), 0f, Random.Range(-width, width));
+        var rand = new Vector3(Random.Range(-width, width), 0f, Random.Range(-width, width));
+        NavMeshHit navMeshHit;
+        NavMesh.SamplePosition(rand, out navMeshHit, 1f, 1);
+        return navMeshHit.position;
     }
 
     Vector3 chooseNewNearPoint()
