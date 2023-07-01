@@ -21,6 +21,8 @@ public class BugAI : MonoBehaviour
     SeekState seekState;
     HuntState huntState;
 
+    bool isHunter;
+
     float currentSpeed { set { navMeshAgent.speed = value; } get { return navMeshAgent.speed; } }
     System.IDisposable timer;
 
@@ -73,6 +75,7 @@ public class BugAI : MonoBehaviour
 
     public void BecomeHunter()
     {
+        isHunter = true;
         setState(huntState);
     }
 
@@ -157,8 +160,12 @@ public class BugAI : MonoBehaviour
         public override void SetUpState(BugAI context)
         {
             context.material.color = context.swarmManager.huntColor;
-            context.swarmManager.hunters.Add(context.transform);
-            context.swarmManager.allBugs.Remove(context);
+        }
+
+        void hunt(BugAI context, BugAI bug)
+        {
+            context.navMeshAgent.destination = bug.transform.position;
+            context.navMeshAgent.speed += context.swarmManager.huntBoost;
         }
 
         public override void Update(BugAI context)
@@ -168,14 +175,13 @@ public class BugAI : MonoBehaviour
             {
                 float nearestDist;
                 BugAI nearestBug = context.nearestBug(out nearestDist);
-                context.navMeshAgent.destination = nearestBug.transform.position;
-                context.navMeshAgent.speed += context.swarmManager.huntBoost;
+                if(nearestDist < context.swarmManager.huntDistance)
+                    hunt(context, nearestBug);
             }
 
-            if (!context.navMeshAgent.pathPending && context.navMeshAgent.remainingDistance < 0.01f)
+            if (context.navMeshAgent.remainingDistance < 0.01f)
             {
-                context.StartNewJourney();
-                context.currentSpeed = Random.Range(context.swarmManager.minMovementSpeed, context.swarmManager.maxMovementSpeed);
+                context.setState(context.seekState);
             }
         }
     }
@@ -198,25 +204,33 @@ public class BugAI : MonoBehaviour
         return distance < swarmManager.hunterAwareDistance;
     }
 
-    
+    bool tryAvoidDanger()
+    {
+        Transform danger;
+        if (Random.Range(0, 100) < 10 && this.checkForDanger(out danger))
+        {
+            var pos = this.transform.position;
+            this.navMeshAgent.destination = this.samplePosition(pos + (pos - danger.position).normalized * 0.5f);
+            this.navMeshAgent.speed += this.swarmManager.fleeBoost;
+            return true;
+        }
+        return false;
+    }
 
     public class SeekState : BugState
     {
+        public BugAI targetBug;
+
         public override void SetUpState(BugAI context)
         {
             context.material.color = context.swarmManager.seekColor;
+            targetBug = null;
         }
 
         public override void Update(BugAI context)
         {
-            Transform danger;
-            if (Random.Range(0, 100) < 10 && context.checkForDanger(out danger))
-            {
-                var pos = context.transform.position;
-                context.navMeshAgent.destination = context.samplePosition(pos + (pos - danger.position).normalized * 0.5f);
-                context.navMeshAgent.speed += context.swarmManager.fleeBoost;
+            if (!context.isHunter && context.tryAvoidDanger())
                 return;
-            }
 
             if (Random.Range(0f, 1000f) < 2f || (!context.navMeshAgent.pathPending && context.navMeshAgent.remainingDistance < 0.01f))
             {
@@ -228,9 +242,21 @@ public class BugAI : MonoBehaviour
                 context.currentSpeed = Random.Range(context.swarmManager.minMovementSpeed, context.swarmManager.maxMovementSpeed);
             }
 
-            if (Random.Range(0f, 100f) < 2f)
+            if (Random.Range(0f, 100f) < 10f)
             {
-                context.setState(context.wanderState);
+                float nearestDist;
+                targetBug = context.nearestBug(out nearestDist);
+
+                if (context.isHunter)
+                {
+                    if (nearestDist <= context.swarmManager.huntDistance)
+                        context.setState(context.huntState);
+                }
+                else
+                {
+                    if(nearestDist <= context.swarmManager.neighbourDistance)
+                        context.setState(context.wanderState);
+                }
             }
         }
     }
@@ -240,22 +266,17 @@ public class BugAI : MonoBehaviour
         public override void SetUpState(BugAI context)
         {
             context.material.color = context.swarmManager.wanderColor;
+            follow(context, context.seekState.targetBug);
         }
 
         public override void Update(BugAI context)
         {
-            Transform danger;
-            if (Random.Range(0, 100) < 10 && context.checkForDanger(out danger))
-            {
-                var pos = context.transform.position;
-                context.navMeshAgent.destination = context.samplePosition(pos + (pos - danger.position).normalized * 0.5f);
-                context.navMeshAgent.speed += context.swarmManager.fleeBoost;
+            if (context.tryAvoidDanger())
                 return;
-            }
 
             if (Random.Range(0,100) < 10)
             {
-                applyRules(context);
+                checkIfStillInFlock(context);
             }
 
             if(context.navMeshAgent.remainingDistance < 0.01f)
@@ -264,15 +285,20 @@ public class BugAI : MonoBehaviour
             }
         }
 
-        void applyRules(BugAI context)
+        void follow(BugAI context, BugAI bug)
+        {
+            context.navMeshAgent.destination = context.samplePosition(bug.navMeshAgent.destination + context.transform.position - bug.transform.position);
+            context.currentSpeed = Mathf.Lerp(context.currentSpeed, bug.currentSpeed, Time.deltaTime);
+        }
+
+        void checkIfStillInFlock(BugAI context)
         {
             float nearestDist;
             BugAI nearestBug = context.nearestBug(out nearestDist);
 
             if (nearestDist < context.swarmManager.neighbourDistance)
             {
-                context.navMeshAgent.destination = context.samplePosition(nearestBug.navMeshAgent.destination + context.transform.position - nearestBug.transform.position);
-                context.currentSpeed = Mathf.Lerp(context.currentSpeed, nearestBug.currentSpeed, Time.deltaTime);
+                follow(context, nearestBug);
             }
         }
     }

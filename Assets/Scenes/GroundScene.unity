@@ -1813,12 +1813,12 @@ MonoBehaviour:
   - {fileID: 1782962827}
   minMovementSpeed: 0.1
   maxMovementSpeed: 0.4
-  huntBoost: 0
+  huntBoost: 0.2
   fleeBoost: 0.1
   boundsWidth: 0.5
   boundsHight: 0.5
   neighbourDistance: 0.2
-  huntDistance: 0
+  huntDistance: 0.5
   hunterAwareDistance: 0.3
   huntColor: {r: 0.8584906, g: 0.08845447, b: 0.03644534, a: 0}
   wanderColor: {r: 0.22801706, g: 0.5943543, b: 0.7924528, a: 0}

@@ -20,7 +20,10 @@ public class SwarmManager : Singleton<SwarmManager>
     {
         if(Input.GetKeyDown(KeyCode.H))
         {
-            allBugs[Random.Range(0, allBugs.Count - 1)].BecomeHunter();
+            var hunter = allBugs[Random.Range(0, allBugs.Count - 1)];
+            hunters.Add(hunter.transform);
+            allBugs.Remove(hunter);
+            hunter.BecomeHunter();
         }
     }
 }
