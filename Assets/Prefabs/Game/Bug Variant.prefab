@@ -62,7 +62,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: db31288b9c099c542816b84e01ed6166, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -197,7 +197,7 @@ PrefabInstance:
     - target: {fileID: 5354952996630153547, guid: fddd92077ebb62d4d96e173c93d442d3,
         type: 3}
       propertyPath: m_Name
-      value: Bug Variant
+      value: Bug
       objectReference: {fileID: 0}
     - target: {fileID: 5354952996630153547, guid: fddd92077ebb62d4d96e173c93d442d3,
         type: 3}
