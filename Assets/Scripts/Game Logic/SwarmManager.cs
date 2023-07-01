@@ -6,10 +6,21 @@ using Pixelplacement;
 public class SwarmManager : Singleton<SwarmManager>
 {
     public List<BugAI> allBugs;
+    public List<Transform> hunters;
 
     public float minMovementSpeed, maxMovementSpeed;
+    public float huntBoost, fleeBoost;
     public float boundsWidth, boundsHight;
     public float neighbourDistance;
+    public float huntDistance, hunterAwareDistance;
 
     public Color huntColor, wanderColor, seekColor;
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.H))
+        {
+            allBugs[Random.Range(0, allBugs.Count - 1)].BecomeHunter();
+        }
+    }
 }

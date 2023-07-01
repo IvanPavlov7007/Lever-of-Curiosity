@@ -19,6 +19,7 @@ public class BugAI : MonoBehaviour
 
     WanderState wanderState;
     SeekState seekState;
+    HuntState huntState;
 
     float currentSpeed { set { navMeshAgent.speed = value; } get { return navMeshAgent.speed; } }
     System.IDisposable timer;
@@ -33,6 +34,7 @@ public class BugAI : MonoBehaviour
 
         wanderState = new WanderState();
         seekState = new SeekState();
+        huntState = new HuntState();
         setState(seekState);
 
 
@@ -63,10 +65,15 @@ public class BugAI : MonoBehaviour
         //debug_rmb();
     }
 
-    private void setState(BugState state)
+    void setState(BugState state)
     {
         currentState = state;
         currentState.SetUpState(this);
+    }
+
+    public void BecomeHunter()
+    {
+        setState(huntState);
     }
 
     void debug_rmb()
@@ -85,6 +92,7 @@ public class BugAI : MonoBehaviour
     private void OnDestroy()
     {
         SwarmManager.Instance.allBugs.Remove(this);
+        SwarmManager.Instance.hunters.Remove(transform);
         //timer.Dispose();
     }
 
@@ -119,20 +127,6 @@ public class BugAI : MonoBehaviour
     }
 
 
-    public abstract class BugState
-    {
-        public abstract void Update(BugAI context);
-        public abstract void SetUpState(BugAI context);
-
-    }
-
-
-    //public class HuntState : BugState
-    //{
-
-    //}
-
-
     BugAI nearestBug(out float distance)
     {
         BugAI nearestBug = null;
@@ -151,6 +145,61 @@ public class BugAI : MonoBehaviour
         return nearestBug;
     }
 
+    public abstract class BugState
+    {
+        public abstract void Update(BugAI context);
+        public abstract void SetUpState(BugAI context);
+    }
+
+
+    public class HuntState : BugState
+    {
+        public override void SetUpState(BugAI context)
+        {
+            context.material.color = context.swarmManager.huntColor;
+            context.swarmManager.hunters.Add(context.transform);
+            context.swarmManager.allBugs.Remove(context);
+        }
+
+        public override void Update(BugAI context)
+        {
+
+            if(Random.Range(0f,100f) < 10f)
+            {
+                float nearestDist;
+                BugAI nearestBug = context.nearestBug(out nearestDist);
+                context.navMeshAgent.destination = nearestBug.transform.position;
+                context.navMeshAgent.speed += context.swarmManager.huntBoost;
+            }
+
+            if (!context.navMeshAgent.pathPending && context.navMeshAgent.remainingDistance < 0.01f)
+            {
+                context.StartNewJourney();
+                context.currentSpeed = Random.Range(context.swarmManager.minMovementSpeed, context.swarmManager.maxMovementSpeed);
+            }
+        }
+    }
+
+    bool checkForDanger(out Transform nearestHunter)
+    {
+        nearestHunter = null;
+        float distance = float.MaxValue;
+        foreach (var hunter in this.swarmManager.hunters)
+        {
+            if (hunter != this)
+            {
+                float dist = Vector3.Distance(hunter.transform.position, this.transform.position);
+                if (dist < distance)
+                {
+                    distance = dist; nearestHunter = hunter;
+                }
+            }
+        }
+        return distance < swarmManager.hunterAwareDistance;
+    }
+
+    
+
     public class SeekState : BugState
     {
         public override void SetUpState(BugAI context)
@@ -160,6 +209,15 @@ public class BugAI : MonoBehaviour
 
         public override void Update(BugAI context)
         {
+            Transform danger;
+            if (Random.Range(0, 100) < 10 && context.checkForDanger(out danger))
+            {
+                var pos = context.transform.position;
+                context.navMeshAgent.destination = context.samplePosition(pos + (pos - danger.position).normalized * 0.5f);
+                context.navMeshAgent.speed += context.swarmManager.fleeBoost;
+                return;
+            }
+
             if (Random.Range(0f, 1000f) < 2f || (!context.navMeshAgent.pathPending && context.navMeshAgent.remainingDistance < 0.01f))
             {
                 context.StartNewJourney();
@@ -186,7 +244,16 @@ public class BugAI : MonoBehaviour
 
         public override void Update(BugAI context)
         {
-            if(Random.Range(0,100) < 10)
+            Transform danger;
+            if (Random.Range(0, 100) < 10 && context.checkForDanger(out danger))
+            {
+                var pos = context.transform.position;
+                context.navMeshAgent.destination = context.samplePosition(pos + (pos - danger.position).normalized * 0.5f);
+                context.navMeshAgent.speed += context.swarmManager.fleeBoost;
+                return;
+            }
+
+            if (Random.Range(0,100) < 10)
             {
                 applyRules(context);
             }

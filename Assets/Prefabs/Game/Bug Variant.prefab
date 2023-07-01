@@ -197,7 +197,7 @@ PrefabInstance:
     - target: {fileID: 5354952996630153547, guid: fddd92077ebb62d4d96e173c93d442d3,
         type: 3}
       propertyPath: m_Name
-      value: Bug
+      value: Bug Variant
       objectReference: {fileID: 0}
     - target: {fileID: 5354952996630153547, guid: fddd92077ebb62d4d96e173c93d442d3,
         type: 3}
@@ -233,9 +233,9 @@ NavMeshAgent:
   m_AgentTypeID: 0
   m_Radius: 0.05
   m_Speed: 0.4
-  m_Acceleration: 0.2
+  m_Acceleration: 2
   avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_AngularSpeed: 720
   m_StoppingDistance: 0.01
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
@@ -273,8 +273,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxVelocity: 0.4
   minVelocity: 0.05
-  width: 0.5
-  heigh: 0.5
 --- !u!4 &5302330130067572339 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5354952996773778659, guid: fddd92077ebb62d4d96e173c93d442d3,
