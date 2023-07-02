@@ -23,6 +23,8 @@ public class StickController : MonoBehaviour
 
     void Start()
     {
+        Cursor.lockState = CursorLockMode.Confined;
+        Cursor.visible = false;
         cam = Camera.main;
         distanceController = transform.GetChild(0);
         body = distanceController.transform.GetChild(0);
