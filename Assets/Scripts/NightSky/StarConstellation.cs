@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.U2D.Animation;
 using UnityEngine.U2D;
+using UnityEngine.Events;
 
 public class StarConstellation : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class StarConstellation : MonoBehaviour
     public List<StarNode> allStars;
     public SpriteShapeController spriteShapeController;
     public Spline spline;
+    public UnityEvent onComplete;
 
     Transform tipTransform;
 
@@ -30,6 +32,16 @@ public class StarConstellation : MonoBehaviour
         if(spline.isOpenEnded && tipTransform != null)
         {
             spline.SetPosition(spline.GetPointCount() - 1, worldToConstellationPosition(tipTransform.position));
+        }
+
+        if (!spline.isOpenEnded)
+        {
+            LinkedListNode<StarNode> starNode = orderedStars.First;
+            for (int i = 0; i < orderedStars.Count; i++)
+            {
+                spline.SetPosition(i, starNode.Value.transform.localPosition);
+                starNode = starNode.Next;
+            }
         }
     }
 
@@ -60,6 +72,8 @@ public class StarConstellation : MonoBehaviour
             {
                 spline.RemovePointAt(spline.GetPointCount() - 1); // remove the tip
                 spline.isOpenEnded = false;
+                if (onComplete != null)
+                    onComplete.Invoke();
             }
             return;
         }
@@ -85,30 +99,6 @@ public class StarConstellation : MonoBehaviour
 
     Vector3 worldToConstellationPosition(Vector3 worldPosition)
     {
-        //if(Input.GetKey(KeyCode.A))
-        //    return spriteShapeController.transform.TransformDirection(worldPosition);
-        //if (Input.GetKey(KeyCode.S))
-        //    return spriteShapeController.transform.TransformPoint(worldPosition);
-        //if (Input.GetKey(KeyCode.D))
-        //    return spriteShapeController.transform.TransformVector(worldPosition);
-        //if (Input.GetKey(KeyCode.Z))
-        //    return spriteShapeController.transform.InverseTransformDirection(worldPosition);
-        //if (Input.GetKey(KeyCode.X))
-        //    return spriteShapeController.transform.InverseTransformPoint(worldPosition);
-        //if (Input.GetKey(KeyCode.C))
-        //    return spriteShapeController.transform.InverseTransformVector(worldPosition);
-
-        //if (Input.GetKey(KeyCode.Alpha1))
-        //    return transform.TransformDirection(worldPosition);
-        //if (Input.GetKey(KeyCode.Alpha2))
-        //    return transform.TransformPoint(worldPosition);
-        //if (Input.GetKey(KeyCode.Alpha3))
-        //    return transform.TransformVector(worldPosition);
-        //if (Input.GetKey(KeyCode.Alpha4))
-        //    return transform.InverseTransformDirection(worldPosition);
-        //if (Input.GetKey(KeyCode.Alpha5))
-        //    return transform.InverseTransformPoint(worldPosition);
-        //return transform.InverseTransformVector(worldPosition);
 
         var normalizedPos = transform.InverseTransformPoint(worldPosition);
         Debug.DrawLine(Vector3.zero, worldPosition);

@@ -11,8 +11,6 @@ public class StarVertexesManager : MonoBehaviour
 {
     [SerializeField] SpriteSkin spriteSkin;
     [SerializeField] GameObject StarPrefab;
-    Spline spline;
-    [SerializeField]SpriteShapeController spriteShapeController;
 
     [SerializeField] int[] sortedIndexes;
     [SerializeField] List<GameObject> stars;
@@ -138,7 +136,6 @@ public class StarVertexesManager : MonoBehaviour
 
     private void OnEnable()
     {
-        spline = spriteShapeController.spline;
     }
 
     public void CreateVertexesForThis()
@@ -158,8 +155,6 @@ public class StarVertexesManager : MonoBehaviour
             DestroyImmediate(star);
         }
         stars.Clear();
-        spline = spriteShapeController.spline;
-        spline.Clear();
 
         var originalVerticesOrder = spriteSkin.GetDeformedVertexPositionData().ToArray();
 
@@ -167,16 +162,14 @@ public class StarVertexesManager : MonoBehaviour
         sortVerticesIndexes(originalVerticesOrder);
         for (int i = 0; i < originalVerticesOrder.Length; i++)
         {
-            spline.InsertPointAt(i, Vector3.right * i + Vector3.up * 100f);
-            var star = Instantiate(StarPrefab, transform.position, Quaternion.identity, transform);
+            var star = PrefabUtility.InstantiatePrefab(StarPrefab,transform);
             EditorUtility.SetDirty(star);
-            stars.Add(star);
+            stars.Add(star as GameObject);
         }
 
         for(int i = 0; i < originalVerticesOrder.Length; i++)
         {
             var pos = spriteSkin.transform.TransformPoint(originalVerticesOrder[i]);
-            spline.SetPosition(sortedIndexes[i], pos);
             stars[sortedIndexes[i]].transform.position = pos;
         }
     }
@@ -191,7 +184,6 @@ public class StarVertexesManager : MonoBehaviour
             {
                 var pos = spriteSkin.transform.TransformPoint(originalVerticesOrder[i]);
                 stars[sortedIndexes[i]].transform.position = pos;
-                spline.SetPosition(sortedIndexes[i], pos);
             }
         }
     }
