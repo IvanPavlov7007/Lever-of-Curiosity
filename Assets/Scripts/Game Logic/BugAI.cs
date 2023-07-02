@@ -92,11 +92,15 @@ public class BugAI : MonoBehaviour
         }
     }
 
+    public GameObject UI_ToDestroy;
+
     private void OnDestroy()
     {
         SwarmManager.Instance.allBugs.Remove(this);
         SwarmManager.Instance.hunters.Remove(transform);
         //timer.Dispose();
+        if (UI_ToDestroy != null)
+            Destroy(UI_ToDestroy);
     }
 
     void StartNewJourney()
