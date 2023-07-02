@@ -66,14 +66,14 @@ public class StickController : MonoBehaviour
 
 
         stickDirection = calculateMousePosition() - transform.position;
-
         
     }
 
     private void FixedUpdate()
     {
         RaycastHit hit;
-        if (Physics.Raycast(new Ray(transform.position, stickDirection), out hit, 10f, layerMask))
+        Debug.DrawRay(transform.position, stickDirection);
+        if (Physics.Raycast(new Ray(transform.position, stickDirection), out hit, 50f, layerMask))
         {
             //distanceController.localPosition = new Vector3(0f, stickPhysicalHalfLength - hit.distance + groundOffset, 0f);
             //transform.up = -stickDirection;

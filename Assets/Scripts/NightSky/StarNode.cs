@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StarNode : MonoBehaviour
+public class StarNode : MonoBehaviour, TriggerRedirectable
 {
     LinkedListNode<StarNode> node;
     public int number;
@@ -22,11 +22,14 @@ public class StarNode : MonoBehaviour
     }
 
     public event Action<StarNode> onStarPressed;
+    public event Action<StarNode, Collider> onStarTouched;
 
-    public void OnCollisionEnter(Collision collision)
+    public void OnTriggerEnter(Collider other)
     {
-        
+        if (onStarTouched != null)
+            onStarTouched(this, other);
     }
+
     public StarConstellation constellation;
     
     public StarNode nextNode, previousNode;
