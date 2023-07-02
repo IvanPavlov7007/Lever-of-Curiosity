@@ -61,14 +61,39 @@ public class StarConstellation : MonoBehaviour
         //updateSpline(star);
     }
 
+
+    int lastStarIndex = -1;
     void updateSpline(StarNode star)
     {
         if (!spline.isOpenEnded)
             return;
 
-        if(orderedStars.Contains(star))
+        #region orderCheck
+        int count = allStars.Count;
+        if (lastStarIndex == -1)
         {
-            if (orderedStars.First.Value == star)
+        }
+        else if(orderedStars.Count >= 1)
+        {
+            if(lastStarIndex == 0)
+            {
+                if (star.index != count - 1 && star.index != 1) return;
+            }
+            else if(lastStarIndex == count - 1)
+            {
+                if (star.index != count - 2 && star.index != 0) return;
+            }
+            else
+            {
+                if (star.index != lastStarIndex - 1 && star.index != lastStarIndex + 1) return;
+            }
+        }
+
+        #endregion
+
+        if (orderedStars.Contains(star))
+        {
+            if (orderedStars.First.Value == star && spline.isOpenEnded)
             {
                 spline.RemovePointAt(spline.GetPointCount() - 1); // remove the tip
                 spline.isOpenEnded = false;
@@ -79,6 +104,7 @@ public class StarConstellation : MonoBehaviour
         }
 
         orderedStars.AddLast(star);
+        lastStarIndex = star.index;
         int index = spline.GetPointCount();
         if (index == 0)
         {

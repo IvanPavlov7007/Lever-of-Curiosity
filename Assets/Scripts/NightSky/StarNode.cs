@@ -5,7 +5,7 @@ using UnityEngine;
 public class StarNode : MonoBehaviour, TriggerRedirectable
 {
     LinkedListNode<StarNode> node;
-    public int number;
+    public int index;
 
     private void Start()
     {
@@ -14,11 +14,6 @@ public class StarNode : MonoBehaviour, TriggerRedirectable
 
     private void Update()
     {
-        if(Input.GetKeyDown(number.ToString()))
-        {
-            if (onStarPressed != null)
-                onStarPressed(this);
-        }    
     }
 
     public event Action<StarNode> onStarPressed;
